@@ -63,7 +63,7 @@ void drawPlayer()
     glLineWidth(1);
     glBegin(GL_LINES);
     glVertex2f(px, py);
-    glVertex2f(px + cos(pa) * 20, py + sin(pa) * 20); 
+    glVertex2f(px + cos(pa) * 20, py + sin(pa) * 20);
     glEnd();
 }
 
@@ -84,7 +84,7 @@ static int blocked(float x, float y, float R)
 void button(unsigned char key, int x, int y)
 {
     float dx = 0, dy = 0; // desire move
-    int movementSpeed = 12, step = 3;
+    int movementSpeed = 100, step = 3;
     float R = 1.0f; // player radius
 
     if (key == 'a')
@@ -103,16 +103,18 @@ void button(unsigned char key, int x, int y)
         pdx = cos(pa) * 5;
         pdy = sin(pa) * 5;
     }
-    if (key == 'w')
-    {
-        dx = movementSpeed * cos(pa);
-        dy = movementSpeed * sin(pa);
-    }
-    if (key == 's')
-    {
-        dx = -movementSpeed * cos(pa);
-        dy = -movementSpeed * sin(pa);
-    }
+if (key == 'w' || key == 's')
+{
+    int direction = (key == 'w') ? 1 : -1;
+    float dxn = pdx / 5.0f;   // normalize back
+    float dyn = pdy / 5.0f;
+
+    if (fabsf(dxn) < 1e-4f) dxn = 0.0f;
+    if (fabsf(dyn) < 1e-4f) dyn = 0.0f;
+
+    dx = direction * movementSpeed * dxn;
+    dy = direction * movementSpeed * dyn;
+}
 
     int steps = movementSpeed / step;
     for (int i = 0; i < steps; i++)
