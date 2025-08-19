@@ -84,7 +84,7 @@ static int blocked(float x, float y, float R)
 void button(unsigned char key, int x, int y)
 {
     float dx = 0, dy = 0; // desire move
-    int movementSpeed = 100, step = 3;
+    int movementSpeed = 12, step = 3;
     float R = 1.0f; // player radius
 
     if (key == 'a')
@@ -103,18 +103,12 @@ void button(unsigned char key, int x, int y)
         pdx = cos(pa) * 5;
         pdy = sin(pa) * 5;
     }
-if (key == 'w' || key == 's')
-{
-    int direction = (key == 'w') ? 1 : -1;
-    float dxn = pdx / 5.0f;   // normalize back
-    float dyn = pdy / 5.0f;
-
-    if (fabsf(dxn) < 1e-4f) dxn = 0.0f;
-    if (fabsf(dyn) < 1e-4f) dyn = 0.0f;
-
-    dx = direction * movementSpeed * dxn;
-    dy = direction * movementSpeed * dyn;
-}
+    if (key == 'w' || key == 's')
+    {
+        int direction = (key == 'w') ? 1 : -1;
+        dx = direction * movementSpeed * ((fabsf(pdx) < 1e-4f) ? 0.0f : pdx / 5.0f);
+        dy = direction * movementSpeed * ((fabsf(pdy) < 1e-4f) ? 0.0f : pdy / 5.0f);
+    }
 
     int steps = movementSpeed / step;
     for (int i = 0; i < steps; i++)
