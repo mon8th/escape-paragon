@@ -11,6 +11,9 @@
 
 float px, py, pdx, pdy, pa; // player angle
 int mapX = 8, mapY = 8, mapS = 64;
+struct {
+    int w, a, s, d;
+} keys;
 
 int map[8][8] =
     {
@@ -254,11 +257,27 @@ static int blocked(float x, float y, float R)
 
 void button(unsigned char key, int x, int y)
 {
-    float dx = 0, dy = 0; // desire move
-    int movementSpeed = 12, step = 3;
-    float R = 1.0f; // player radius
+    if (key == 'w') keys.w = 1;
+    if (key == 'a') keys.a = 1;
+    if (key == 's') keys.s = 1;
+    if (key == 'd') keys.d = 1;
+}
 
-    if (key == 'a')
+void buttonUp(unsigned char key, int x, int y)
+{
+    if (key == 'w') keys.w = 0;
+    if (key == 'a') keys.a = 0;
+    if (key == 's') keys.s = 0;
+    if (key == 'd') keys.d = 0;
+}
+
+void updateMovement()
+{
+    float dx = 0, dy = 0;
+    int movementSpeed = 3, step = 3;
+    float R = 1.0f;
+
+    if (keys.a == 1)
     {
         pa += 0.1f;
         if (pa >= 2 * PI)
@@ -266,7 +285,7 @@ void button(unsigned char key, int x, int y)
         pdx = cos(pa) * 5;
         pdy = sin(pa) * 5;
     }
-    if (key == 'd')
+    if (keys.d == 1)
     {
         pa -= 0.1f;
         if (pa < 0)
@@ -274,39 +293,53 @@ void button(unsigned char key, int x, int y)
         pdx = cos(pa) * 5;
         pdy = sin(pa) * 5;
     }
-    if (key == 'w' || key == 's')
+    
+    if (keys.w == 1)
     {
-        int direction = (key == 'w') ? 1 : -1;
-        dx = direction * movementSpeed * ((fabsf(pdx) < 1e-4f) ? 0.0f : pdx / 5.0f);
-        dy = direction * movementSpeed * ((fabsf(pdy) < 1e-4f) ? 0.0f : pdy / 5.0f);
+        dx += movementSpeed * cos(pa);
+        dy += movementSpeed * sin(pa);
+    }
+    if (keys.s == 1)
+    {
+        dx -= movementSpeed * cos(pa);
+        dy -= movementSpeed * sin(pa);
     }
 
-    int steps = movementSpeed / step;
-    for (int i = 0; i < steps; i++)
+    // Apply movement with collision detection
+    if (dx != 0 || dy != 0)
     {
-        float stepX = dx / steps;
-        float stepY = dy / steps;
-        float newX = px + stepX;
-        float newY = py + stepY;
-
-        if (!blocked(newX, newY, R))
+        int steps = movementSpeed / step;
+        for (int i = 0; i < steps; i++)
         {
-            px = newX;
-            py = newY;
+            float stepX = dx / steps;
+            float stepY = dy / steps;
+            float newX = px + stepX;
+            float newY = py + stepY;
+
+            if (!blocked(newX, newY, R))
+            {
+                px = newX;
+                py = newY;
+            }
+            else
+                break;
         }
-        else
-            break;
     }
-    glutPostRedisplay();
 }
 
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    updateMovement(); 
     draw2DMap();
     drawPlayer();
     castRay2D();
     glutSwapBuffers();
+}
+
+void resize()
+{
+    glutReshapeWindow(1024, 512);
 }
 
 void init()
@@ -318,6 +351,7 @@ void init()
     pa = 0;
     pdx = cos(pa) * 5;
     pdy = sin(pa) * 5;
+    keys.w = keys.a = keys.s = keys.d = 0;
 }
 
 int main(int argc, char *argv[])
@@ -328,6 +362,9 @@ int main(int argc, char *argv[])
     glutCreateWindow("Escape-Paragon");
     init();
     glutKeyboardFunc(button);
+    glutKeyboardUpFunc(buttonUp);  
+    glutReshapeFunc(resize);
     glutDisplayFunc(display);
+    glutIdleFunc(display); 
     glutMainLoop();
 }
